@@ -1,0 +1,123 @@
+module adder_pipe # (
+  parameter  P = 100,
+//  parameter                DAT_BITS = 256,
+  parameter  BITS = $clog2(P),
+  parameter  C_DATA_WIDTH = 32,
+  parameter  C_NUM_CHANNELS = 2,
+  parameter  CTL_BITS = 8,
+  parameter  LEVEL = 1     // If LEVEL == 1 this is just an add with registered output
+) (
+  input                aclk,
+  input                areset,
+  input  logic  [C_NUM_CHANNELS-1:0]                   s_tvalid,
+  input  logic  [C_NUM_CHANNELS-1:0][C_DATA_WIDTH-1:0] s_tdata ,
+  output logic  [C_NUM_CHANNELS-1:0]                   s_tready,
+
+  output wire                                        m_tvalid,
+  output wire [C_DATA_WIDTH-1:0]                     m_tdata,
+  input  wire                                        m_tready
+//   if_axi_stream.sink   i_add,
+//   if_axi_stream.source o_add
+);
+
+
+// Internally we want to use a even divisor for BITS of BITS/LEVEL
+localparam DAT_BITS = BITS + (BITS % LEVEL);
+localparam BITS_LEVEL = DAT_BITS/LEVEL;
+
+logic [DAT_BITS-1:0] P_;
+
+logic [LEVEL:0][DAT_BITS:0] result0, result1;
+logic [LEVEL:0][DAT_BITS:0] a, b;
+// logic [LEVEL:0][1:0] sop_eop;
+logic [LEVEL:0][CTL_BITS-1:0] ctl;   // Top ctl bit we use to check if this needs a subtraction in P
+logic [LEVEL:0] val, rdy;
+logic [LEVEL:0] carry_neg;
+always_comb begin
+ s_tready[0] = rdy[0]&&val[0];
+ s_tready[1] = rdy[0]&&val[0];
+end
+// assign s_tready = m_tready & m_tvalid ? {C_NUM_CHANNELS{1'b1}} : {C_NUM_CHANNELS{1'b0}};
+assign m_tdata = carry_neg[LEVEL] ? result0[LEVEL] : result1[LEVEL];
+assign m_tvalid = val[LEVEL];
+
+always_comb begin
+  P_ = 0;
+  P_ = P;
+  carry_neg[0] = 0;
+  val[0] = s_tvalid[0]&&s_tvalid[1];
+//   ctl[0] = i_add.ctl;
+  a[0] = 0;
+  a[0] = s_tdata[0][0 +: BITS];
+  b[0] = 0;
+  b[0] = s_tdata[1][0 +: BITS];
+//   sop_eop[0][0] = i_add.sop;
+//   sop_eop[0][1] = i_add.eop;
+  result0[0] = 0;
+  result1[0] = 0;
+  rdy[LEVEL] = m_tready;
+//  s_tready[0] = rdy[0];
+//  s_tready[1] = rdy[0];
+//   o_add.copy_if_comb(carry_neg[LEVEL] ? result0[LEVEL] : result1[LEVEL], val[LEVEL], 1, 1, 0, 0, ctl[LEVEL]);
+
+//   o_add.sop = sop_eop[LEVEL][0];
+//   o_add.eop = sop_eop[LEVEL][1];
+end
+
+generate
+genvar g;
+  for (g = 0; g < LEVEL; g++) begin: ADDER_GEN
+
+    logic [BITS_LEVEL:0] add_res0, add_res0_, add_res1;
+    logic cn;
+
+    always_comb begin
+      rdy[g] = ~val[g+1] || (val[g+1] && rdy[g+1]);
+      add_res0 = a[g][g*BITS_LEVEL +: BITS_LEVEL] +
+                 b[g][g*BITS_LEVEL +: BITS_LEVEL] +
+                 result0[g][g*BITS_LEVEL];
+
+      add_res0_ = a[g][g*BITS_LEVEL +: BITS_LEVEL] +
+                  b[g][g*BITS_LEVEL +: BITS_LEVEL] +
+                  result1[g][g*BITS_LEVEL];
+
+      if (add_res0_ < (P_[g*BITS_LEVEL +: BITS_LEVEL] + carry_neg[g])) begin
+        cn = 1;
+        add_res1 = add_res0_ - P_[g*BITS_LEVEL +: BITS_LEVEL] + (1 << BITS_LEVEL) - carry_neg[g];
+      end else begin
+        cn = 0;
+        add_res1 = add_res0_ - P_[g*BITS_LEVEL +: BITS_LEVEL] - carry_neg[g];
+      end
+    end
+
+    always_ff @ (posedge aclk) begin
+      if (areset) begin
+        val[g+1] <= 0;
+        result0[g+1] <= 0;
+        result1[g+1] <= 0;
+        a[g+1] <= 0;
+        b[g+1] <= 0;
+        ctl[g+1] <= 0;
+        carry_neg[g+1] <= 0;
+//        sop_eop[g+1] <= 0;
+      end else begin
+        if (rdy[g]) begin
+          val[g+1] <= val[g];
+          ctl[g+1] <= ctl[g];
+          a[g+1] <= a[g];
+          b[g+1] <= b[g];
+        //   sop_eop[g+1] <= sop_eop[g];
+
+          result0[g+1] <= result0[g];
+          result0[g+1][g*BITS_LEVEL +: BITS_LEVEL + 1] <= add_res0;
+
+          result1[g+1] <= result1[g];
+          result1[g+1][g*BITS_LEVEL +: BITS_LEVEL + 1] <= add_res1;
+
+          carry_neg[g+1] <= cn;
+        end
+      end
+    end
+  end
+endgenerate
+endmodule

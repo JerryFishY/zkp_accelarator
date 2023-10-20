@@ -310,7 +310,8 @@ xpm_fifo_sync # (
 );
 
 // Combinatorial Adder
-krnl_vadd_rtl_adder #( 
+// krnl_vadd_rtl_adder #( 
+  adder_pipe # (
   .C_DATA_WIDTH   ( C_M_AXI_GMEM_DATA_WIDTH ) ,
   .C_NUM_CHANNELS ( LP_NUM_READ_CHANNELS    ) 
 )
