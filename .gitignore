@@ -1,0 +1,11 @@
+_*/
+.*/
+build*/
+package*/
+tmp*/
+.vscode-ctags*
+*.csv
+*.log
+*.jou
+*.run_summary
+rtl_vadd
