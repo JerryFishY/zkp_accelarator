@@ -15,10 +15,10 @@ module barret_mod_pipe #(
   output logic                o_val,
   output logic                o_err,
   input                       i_rdy,
-  if_axi_stream.source        o_mult_if_0,
-  if_axi_stream.sink          i_mult_if_0,
-  if_axi_stream.source        o_mult_if_1,
-  if_axi_stream.sink          i_mult_if_1
+  if_axi_stream.slave        o_mult_if_0,
+  if_axi_stream.master         i_mult_if_0,
+  if_axi_stream.slave        o_mult_if_1,
+  if_axi_stream.master         i_mult_if_1
 );
 
 localparam                 K = $clog2(P)/2 + 1;
@@ -30,8 +30,8 @@ logic [DAT_BITS-1:0] dat;
 logic val;
 logic rdy;
 
-if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_in_if(i_clk);
-if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_out_if(i_clk);
+if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_in_if (.i_clk(i_clk));
+if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_out_if(.i_clk(i_clk));
 logic fifo_out_full;
 
 // Stage 1 multiplication

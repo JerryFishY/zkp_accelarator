@@ -16,7 +16,7 @@
 #include "xcl2.hpp"
 #include <vector>
 
-#define DATA_SIZE 256
+#define DATA_SIZE 2000
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < size; i++) {
         source_input1[i] = i;
         source_input2[i] = i;
-        source_sw_results[i] = source_input1[i] + source_input2[i];
+        source_sw_results[i] = (source_input1[i] * source_input2[i])%100000000;
         source_hw_results[i] = 0;
     }
 

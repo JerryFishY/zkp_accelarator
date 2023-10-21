@@ -22,10 +22,10 @@ module barret_reduction_wrapper #(
   input                       i_rdy
 );
 
-  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) o_mult_if_0(i_clk);
-  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_0(i_clk);
-  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) o_mult_if_1(i_clk);
-  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_1(i_clk);
+  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) o_mult_if_0(.i_clk(i_clk));
+  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_0(.i_clk(i_clk));
+  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) o_mult_if_1(.i_clk(i_clk));
+  if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_1(.i_clk(i_clk));
 
   barret_mod_pipe # (
   .DAT_BITS(DAT_BITS),

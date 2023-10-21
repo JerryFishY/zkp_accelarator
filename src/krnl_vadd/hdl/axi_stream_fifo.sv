@@ -28,8 +28,8 @@ module axi_stream_fifo #(
   parameter USE_BRAM = 0  // If using BRAM there is an extra cycle delay between reads
 ) (
   input i_clk, i_rst,
-  if_axi_stream.sink   i_axi,
-  if_axi_stream.source o_axi,
+  if_axi_stream.master  i_axi,
+  if_axi_stream.slave  o_axi,
   output logic         o_full,
   output logic         o_emp
 );

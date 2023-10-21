@@ -35,7 +35,7 @@ module accum_mult_barret # (
 
 
 
-if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_0(aclk);
+if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_0(.i_clk(aclk));
 logic o_rdy ;
 
 always_comb begin
