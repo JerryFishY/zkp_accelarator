@@ -337,7 +337,7 @@ accum_mult_barret # (
   .DAT_BITS       ( C_M_AXI_GMEM_DATA_WIDTH ),
   .C_NUM_CHANNELS ( LP_NUM_READ_CHANNELS    ) 
 )
-inst_adder ( 
+inst_dut ( 
   .aclk     ( ap_clk            ) ,
   .areset   ( areset            ) ,
 
