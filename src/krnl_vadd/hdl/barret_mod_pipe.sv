@@ -101,10 +101,10 @@ always_ff @ (posedge i_clk) begin
     if (i_mult_if_1.rdy) begin
       val <= i_mult_if_1.val;
       ctl <= i_mult_if_1.ctl;
-      if(fifo_out_if.dat!=0)
+      if(fifo_out_if.dat>=i_mult_if_1.dat % (1 << (2*K + 2)))
       dat <= fifo_out_if.dat - (i_mult_if_1.dat % (1 << (2*K + 2)));
       else
-      dat <= (1 << (2*K + 2)) - (i_mult_if_1.dat % (1 << (2*K + 2)));
+      dat <= (1 << (2*K + 2)) + fifo_out_if.dat - (i_mult_if_1.dat % (1 << (2*K + 2)));
     end
   end
 end
