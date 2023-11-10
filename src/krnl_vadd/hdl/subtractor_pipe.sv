@@ -1,6 +1,5 @@
 module subtractor_pipe # (
   parameter  P = 100,
-//  parameter  DAT_BITS = 256,
   parameter  BITS = $clog2(P),
   parameter  C_DATA_WIDTH = 32,
   parameter  C_NUM_CHANNELS = 2,
@@ -37,7 +36,6 @@ always_comb begin
  s_tready[0] = rdy[0]&&val[0];
  s_tready[1] = rdy[0]&&val[0];
 end
-// assign s_tready = m_tready & m_tvalid ? {C_NUM_CHANNELS{1'b1}} : {C_NUM_CHANNELS{1'b0}};
 assign m_tdata = carry_neg1[LEVEL] ? result0[LEVEL] : result1[LEVEL];
 assign m_tvalid = val[LEVEL];
 

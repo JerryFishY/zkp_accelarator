@@ -16,7 +16,7 @@
 #include "xcl2.hpp"
 #include <vector>
 
-#define DATA_SIZE 100
+#define DATA_SIZE 10000
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -39,13 +39,13 @@ int main(int argc, char** argv) {
     std::vector<unsigned, aligned_allocator<int> > source_sw_results(size);
 
     // Create the test data and Software Result
-    for (int i = 0; i < size; i++) {
+    for (int i = 2; i < size; i++) {
         // source_input1[0] = (1)%100000000;
         // source_input2[0] = (1)%100000000;
-        source_input1[i] = (i*i)%100000000;
-        source_input2[i] = (i*i*i)%100000000;
+        source_input1[i] = (i*i)%60000;
+        source_input2[i] = (i*i)%60000;
         // source_sw_results[0] = 1;
-        source_sw_results[i] = (source_input1[i] * source_input2[i])%100000000;
+        source_sw_results[i] = (static_cast<uint64_t>(source_input1[i]*source_input2[i]))%60000;
         source_hw_results[i] = 0;
     }
 

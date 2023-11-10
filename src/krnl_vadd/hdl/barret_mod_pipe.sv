@@ -21,7 +21,7 @@ module barret_mod_pipe #(
   if_axi_stream.master         i_mult_if_1
 );
 
-localparam                 K = $clog2(P)/2 + 1;
+localparam                 K = $clog2(P)/2 + $clog2(P)%2;
 localparam                 MAX_IN_BITS = 4*K;
 localparam [MAX_IN_BITS:0] U = (1 << 4*K) / P;
 

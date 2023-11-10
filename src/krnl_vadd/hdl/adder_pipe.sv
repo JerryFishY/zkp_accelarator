@@ -1,6 +1,5 @@
 module adder_pipe # (
   parameter  P = 100,
-//  parameter                DAT_BITS = 256,
   parameter  BITS = $clog2(P),
   parameter  C_DATA_WIDTH = 32,
   parameter  C_NUM_CHANNELS = 2,
@@ -37,31 +36,22 @@ always_comb begin
  s_tready[0] = rdy[0]&&val[0];
  s_tready[1] = rdy[0]&&val[0];
 end
-// assign s_tready = m_tready & m_tvalid ? {C_NUM_CHANNELS{1'b1}} : {C_NUM_CHANNELS{1'b0}};
+
 assign m_tdata = carry_neg[LEVEL] ? result0[LEVEL] : result1[LEVEL];
 assign m_tvalid = val[LEVEL];
 
 always_comb begin
-  P_ = 0;
+  // P_ = 0;
   P_ = P;
   carry_neg[0] = 0;
   val[0] = s_tvalid[0]&&s_tvalid[1];
-//   ctl[0] = i_add.ctl;
-  a[0] = 0;
   a[0] = s_tdata[0][0 +: BITS];
-  b[0] = 0;
   b[0] = s_tdata[1][0 +: BITS];
-//   sop_eop[0][0] = i_add.sop;
-//   sop_eop[0][1] = i_add.eop;
+
   result0[0] = 0;
   result1[0] = 0;
   rdy[LEVEL] = m_tready;
-//  s_tready[0] = rdy[0];
-//  s_tready[1] = rdy[0];
-//   o_add.copy_if_comb(carry_neg[LEVEL] ? result0[LEVEL] : result1[LEVEL], val[LEVEL], 1, 1, 0, 0, ctl[LEVEL]);
 
-//   o_add.sop = sop_eop[LEVEL][0];
-//   o_add.eop = sop_eop[LEVEL][1];
 end
 
 generate
@@ -99,15 +89,12 @@ genvar g;
         b[g+1] <= 0;
         ctl[g+1] <= 0;
         carry_neg[g+1] <= 0;
-//        sop_eop[g+1] <= 0;
       end else begin
         if (rdy[g]) begin
           val[g+1] <= val[g];
           ctl[g+1] <= ctl[g];
           a[g+1] <= a[g];
           b[g+1] <= b[g];
-        //   sop_eop[g+1] <= sop_eop[g];
-
           result0[g+1] <= result0[g];
           result0[g+1][g*BITS_LEVEL +: BITS_LEVEL + 1] <= add_res0;
 
