@@ -311,8 +311,12 @@ xpm_fifo_sync # (
 
 // Combinatorial Adder
 // krnl_vadd_rtl_adder #( 
-  adder_pipe # (
-  .C_DATA_WIDTH   ( C_M_AXI_GMEM_DATA_WIDTH ) ,
+  // adder_pipe # (
+  // accum_mult_barret # (
+  ofman_mult_barret # (
+//  subtractor_pipe # (
+  // .C_DATA_WIDTH   ( C_M_AXI_GMEM_DATA_WIDTH ) ,
+  .DAT_BITS       ( C_M_AXI_GMEM_DATA_WIDTH ),
   .C_NUM_CHANNELS ( LP_NUM_READ_CHANNELS    ) 
 )
 inst_adder ( 
@@ -326,6 +330,25 @@ inst_adder (
   .m_tvalid ( adder_tvalid      ) ,
   .m_tready ( ~adder_tready_n   ) ,
   .m_tdata  ( adder_tdata       ) 
+);
+
+accum_mult_barret # (
+//  subtractor_pipe # (
+  // .C_DATA_WIDTH   ( C_M_AXI_GMEM_DATA_WIDTH ) ,
+  .DAT_BITS       ( C_M_AXI_GMEM_DATA_WIDTH ),
+  .C_NUM_CHANNELS ( LP_NUM_READ_CHANNELS    ) 
+)
+inst_dut ( 
+  .aclk     ( ap_clk            ) ,
+  .areset   ( areset            ) ,
+
+  .s_tvalid (                   ) ,
+  .s_tready (                   ) ,
+  .s_tdata  (                   ) ,
+
+  .m_tvalid (                   ) ,
+  .m_tready (                   ) ,
+  .m_tdata  (                   ) 
 );
 
 // xpm_fifo_sync: Synchronous FIFO

@@ -17,9 +17,9 @@ interface if_axi_stream # (
   logic [DAT_BITS-1:0] dat;
   logic [MOD_BITS-1:0] mod;
 
-  modport sink (input val, err, sop, eop, ctl, dat, mod, i_clk, output rdy,
+  modport master (input val, err, sop, eop, ctl, dat, mod, i_clk, output rdy,
   import task get_keep_from_mod());
-  modport source (output val, err, sop, eop, ctl, dat, mod, input rdy, i_clk,
+  modport slave (output val, err, sop, eop, ctl, dat, mod, input rdy, i_clk,
                   import task reset_source(),
                   import task copy_if(dat_, val_, sop_, eop_, err_, mod_, ctl_),
                   import task copy_if_comb(dat_, val_, sop_, eop_, err_, mod_, ctl_),
@@ -135,6 +135,55 @@ interface if_axi_stream # (
     //@(negedge i_clk);
 
     rdy = rdy_l;
+  endtask
+
+endinterface
+
+interface if_ram # (
+  parameter RAM_WIDTH = 32,
+  parameter RAM_DEPTH = 128,
+  parameter BYT_EN = 1
+)(
+  input i_clk, i_rst
+);
+
+  logic [RAM_DEPTH-1:0] a;
+  logic en;
+  logic [BYT_EN -1:0] we;
+  logic re;
+  logic [RAM_WIDTH-1:0 ] d, q;
+
+  modport sink (input a, en, re, we, d, i_clk, i_rst, output q);
+  modport source (output a, en, re, we, d, input q, i_clk, i_rst, import task reset_source());
+
+  // Task to reset a source interface signals to all 0
+  task reset_source();
+    a <= 0;
+    en <= 0;
+    we <= 0;
+    re <= 0;
+    d <= 0;
+  endtask
+
+  task automatic write_data(input logic [RAM_DEPTH-1:0] addr,
+                            input logic [common_pkg::MAX_SIM_BYTS*8-1:0] data);
+
+    integer len_bits = $clog2(data);
+
+    @(posedge i_clk);
+    a = addr;
+    while (len_bits > 0) begin
+      en = 1;
+      we = 1;
+      re = 0;
+      d = data;
+      data = data >> RAM_WIDTH;
+      @(posedge i_clk); // Go to next clock edge
+      len_bits = len_bits > RAM_WIDTH ? len_bits - RAM_WIDTH : 0;
+      a = a + 1;
+    end
+    en = 0;
+    we = 0;
   endtask
 
 endinterface

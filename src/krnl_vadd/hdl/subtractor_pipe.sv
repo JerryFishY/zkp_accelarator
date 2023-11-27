@@ -1,6 +1,5 @@
 module subtractor_pipe # (
   parameter  P = 100,
-//  parameter  DAT_BITS = 256,
   parameter  BITS = $clog2(P),
   parameter  C_DATA_WIDTH = 32,
   parameter  C_NUM_CHANNELS = 2,
@@ -34,10 +33,9 @@ logic [LEVEL:0][CTL_BITS-1:0] ctl;   // Top ctl bit we use to check if this need
 logic [LEVEL:0] val, rdy;
 logic [LEVEL:0] carry_neg0, carry_neg1;;
 always_comb begin
- s_tready[0] = rdy[0]&&val[0];
- s_tready[1] = rdy[0]&&val[0];
+ s_tready[0] = (rdy[0]);
+ s_tready[1] = (rdy[0]);
 end
-// assign s_tready = m_tready & m_tvalid ? {C_NUM_CHANNELS{1'b1}} : {C_NUM_CHANNELS{1'b0}};
 assign m_tdata = carry_neg1[LEVEL] ? result0[LEVEL] : result1[LEVEL];
 assign m_tvalid = val[LEVEL];
 
@@ -75,7 +73,11 @@ genvar g;
     logic cn0, cn1;
 
     always_comb begin
-      rdy[g] = ~val[g+1] || (val[g+1] && rdy[g+1]);
+//      rdy[g] = ~val[g+1] || (val[g+1] && rdy[g+1]);
+      if(rdy[g+1])
+        rdy[g] = 1;
+      else
+        rdy[g] = ~val[g+1];
 
       sub_res0_ = a[g][g*BITS_LEVEL +: BITS_LEVEL] + P_[g*BITS_LEVEL +: BITS_LEVEL] + result0[g][g*BITS_LEVEL];
       sub_res0__ = b[g][g*BITS_LEVEL +: BITS_LEVEL] + carry_neg0[g];

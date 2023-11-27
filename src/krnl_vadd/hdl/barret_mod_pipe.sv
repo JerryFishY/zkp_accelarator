@@ -15,13 +15,13 @@ module barret_mod_pipe #(
   output logic                o_val,
   output logic                o_err,
   input                       i_rdy,
-  if_axi_stream.source        o_mult_if_0,
-  if_axi_stream.sink          i_mult_if_0,
-  if_axi_stream.source        o_mult_if_1,
-  if_axi_stream.sink          i_mult_if_1
+  if_axi_stream.slave        o_mult_if_0,
+  if_axi_stream.master         i_mult_if_0,
+  if_axi_stream.slave        o_mult_if_1,
+  if_axi_stream.master         i_mult_if_1
 );
 
-localparam                 K = $clog2(P)/2 + 1;
+localparam                 K = $clog2(P)/2 + $clog2(P)%2;
 localparam                 MAX_IN_BITS = 4*K;
 localparam [MAX_IN_BITS:0] U = (1 << 4*K) / P;
 
@@ -30,13 +30,17 @@ logic [DAT_BITS-1:0] dat;
 logic val;
 logic rdy;
 
-if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_in_if(i_clk);
-if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_out_if(i_clk);
+if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_in_if (.i_clk(i_clk));
+if_axi_stream #(.DAT_BITS(2*K + 2), .CTL_BITS(CTL_BITS)) fifo_out_if(.i_clk(i_clk));
 logic fifo_out_full;
 
 // Stage 1 multiplication
 always_comb begin
-  o_rdy = (~o_mult_if_0.val || (o_mult_if_0.val && o_mult_if_0.rdy)) && fifo_in_if.rdy;
+//  o_rdy = (~o_mult_if_0.val || (o_mult_if_0.val && o_mult_if_0.rdy)) && fifo_in_if.rdy;
+    if(o_mult_if_0.rdy) 
+      o_rdy = fifo_in_if.rdy;
+    else
+      o_rdy = fifo_in_if.rdy&&!o_mult_if_0.val;
 end
 
 
@@ -64,14 +68,18 @@ end
 
 // Stage 2 shift + multiplication
 always_comb begin
-  i_mult_if_0.rdy = ~o_mult_if_1.val || (o_mult_if_1.val && o_mult_if_1.rdy);
+  if(o_mult_if_1.rdy)
+    i_mult_if_0.rdy = 1;
+  else
+    i_mult_if_0.rdy = !o_mult_if_1.val;
+//  i_mult_if_0.rdy = ~o_mult_if_1.val || (o_mult_if_1.val && o_mult_if_1.rdy);
 end
 
 always_ff @ (posedge i_clk) begin
   if (i_rst) begin
     o_mult_if_1.reset_source();
   end else begin
-    if (o_mult_if_1.rdy) o_mult_if_1.val <= 0;
+//    if (o_mult_if_1.rdy) o_mult_if_1.val <= 0;
   
     if (i_mult_if_0.rdy) begin
       o_mult_if_1.sop <= 1;
@@ -86,7 +94,11 @@ end
 
 // Stage 3 subtraction to final result
 always_comb begin
-  i_mult_if_1.rdy = (rdy && val) || ~val;
+  if(rdy)
+    i_mult_if_1.rdy = 1;
+  else
+    i_mult_if_1.rdy = !val;
+//  i_mult_if_1.rdy = (rdy && val) || ~val;
 end
 always_comb begin
   fifo_out_if.rdy = i_mult_if_1.val && i_mult_if_1.rdy;
@@ -101,14 +113,21 @@ always_ff @ (posedge i_clk) begin
     if (i_mult_if_1.rdy) begin
       val <= i_mult_if_1.val;
       ctl <= i_mult_if_1.ctl;
+      if(fifo_out_if.dat>=i_mult_if_1.dat % (1 << (2*K + 2)))
       dat <= fifo_out_if.dat - (i_mult_if_1.dat % (1 << (2*K + 2)));
+      else
+      dat <= (1 << (2*K + 2)) + fifo_out_if.dat - (i_mult_if_1.dat % (1 << (2*K + 2)));
     end
   end
 end
 
 // Stage 4 possible subtraction of mod
 always_comb begin
-  rdy = (i_rdy && o_val) || ~o_val;
+//  rdy = (i_rdy && o_val) || ~o_val;
+   if(i_rdy)
+    rdy = 1;
+   else
+    rdy = !o_val;
 end
 
 always_ff @ (posedge i_clk) begin

@@ -1,13 +1,9 @@
-module accum_mult_barret # (
+module ofman_mult_barret # (
   parameter                DAT_BITS = 256,
   parameter                CTL_BITS = 8,
   parameter                IN_BITS = DAT_BITS*2,
   parameter [DAT_BITS-1:0] P = 60000,
-  parameter BITS_A       = DAT_BITS,
-  parameter BITS_B       = BITS_A,
-  parameter LEVEL_A      = 1,
-  parameter LEVEL_B      = LEVEL_A,
-  parameter ADD_PIPELINE = 0,
+  parameter LEVEL        = 3,
   parameter  C_DATA_WIDTH = DAT_BITS,
   parameter  C_NUM_CHANNELS = 2
 )(
@@ -39,17 +35,15 @@ if_axi_stream #(.DAT_BITS(2*DAT_BITS), .CTL_BITS(CTL_BITS)) i_mult_if_0(.i_clk(a
 logic o_rdy ;
 
 always_comb begin
-   s_tready[0] = o_rdy&& s_tvalid[0]&&s_tvalid[1];
-   s_tready[1] = o_rdy&& s_tvalid[0]&&s_tvalid[1];
+   s_tready[0] = o_rdy;
+   s_tready[1] = o_rdy;
 end
 
-accum_mult # (
-  .BITS_A      (BITS_A      ),
-  .BITS_B      (BITS_B      ),
-  .LEVEL_A     (LEVEL_A     ),
-  .LEVEL_B     (LEVEL_B     ),
-  .ADD_PIPELINE(ADD_PIPELINE)
-) accum_mult_gen_intput (
+karatsuba_ofman_mult # (
+  .BITS        (DAT_BITS),
+  .CTL_BITS    (CTL_BITS),
+  .LEVEL       (LEVEL )
+  )   mult_0 (
   .i_clk  (aclk),
   .i_rst  (areset),
   .i_dat_a(s_tdata[0]),
@@ -58,19 +52,20 @@ accum_mult # (
   .o_rdy  (o_rdy),
   .o_dat  (i_mult_if_0.dat),
   .o_val  (i_mult_if_0.val),
+  .i_ctl  (),
+  .o_ctl  (),
   .i_rdy  (i_mult_if_0.rdy)
   );
 
-barret_reduction_wrapper # (
+barret_reduction_wrapper_ofman # (
   .DAT_BITS    (DAT_BITS    ),
   .CTL_BITS    (CTL_BITS    ),
   .IN_BITS     (IN_BITS     ),
   .P           (P           ),
-  .BITS_A      (BITS_A      ),
-  .BITS_B      (BITS_B      ),
-  .LEVEL_A     (LEVEL_A     ),
-  .LEVEL_B     (LEVEL_B     ),
-  .ADD_PIPELINE(ADD_PIPELINE)
+  .BITS_A      (DAT_BITS      ),
+  .BITS_B      (DAT_BITS      ),
+  .LEVEL_A     (LEVEL     ),
+  .LEVEL_B     (LEVEL     )
 ) barret_reduction_module (
   .i_clk       (aclk),
   .i_rst       (areset),

@@ -1,4 +1,4 @@
-module barret_reduction_wrapper #(
+module barret_reduction_wrapper_ofman #(
   parameter                DAT_BITS     = 256,
   parameter                CTL_BITS     = 8,
   parameter                IN_BITS      = DAT_BITS*2,
@@ -6,8 +6,7 @@ module barret_reduction_wrapper #(
   parameter                BITS_A       = DAT_BITS,
   parameter                BITS_B       = BITS_A,
   parameter                LEVEL_A      = 1,
-  parameter                LEVEL_B      = LEVEL_A,
-  parameter                ADD_PIPELINE = 0
+  parameter                LEVEL_B      = LEVEL_A
 ) (               
   input                       i_clk,
   input                       i_rst,
@@ -50,12 +49,10 @@ module barret_reduction_wrapper #(
     .i_mult_if_1(i_mult_if_1)
   );
 
-  accum_mult # (
-  .BITS_A      (BITS_A      ),
-  .BITS_B      (BITS_B      ),
-  .LEVEL_A     (LEVEL_A     ),
-  .LEVEL_B     (LEVEL_B     ),
-  .ADD_PIPELINE(ADD_PIPELINE)
+  karatsuba_ofman_mult # (
+  .BITS        (DAT_BITS),
+  .CTL_BITS    (CTL_BITS),
+  .LEVEL       (LEVEL_A )
   )   mult_0 (
   .i_clk  (i_clk),
   .i_rst  (i_rst),
@@ -64,16 +61,16 @@ module barret_reduction_wrapper #(
   .i_val  (o_mult_if_0.val),
   .o_rdy  (o_mult_if_0.rdy),
   .o_dat  (i_mult_if_0.dat),
+  .i_ctl  (),
+  .o_ctl  (),
   .o_val  (i_mult_if_0.val),
   .i_rdy  (i_mult_if_0.rdy)
   );
 
-  accum_mult # (
-  .BITS_A      (BITS_A      ),
-  .BITS_B      (BITS_B      ),
-  .LEVEL_A     (LEVEL_A     ),
-  .LEVEL_B     (LEVEL_B     ),
-  .ADD_PIPELINE(ADD_PIPELINE)
+  karatsuba_ofman_mult # (
+  .BITS        (DAT_BITS),
+  .CTL_BITS    (CTL_BITS),
+  .LEVEL       (LEVEL_A )
   )   mult_1 (
   .i_clk  (i_clk),
   .i_rst  (i_rst),
@@ -82,6 +79,8 @@ module barret_reduction_wrapper #(
   .i_val  (o_mult_if_1.val),
   .o_rdy  (o_mult_if_1.rdy),
   .o_dat  (i_mult_if_1.dat),
+  .i_ctl  (),
+  .o_ctl  (),
   .o_val  (i_mult_if_1.val),
   .i_rdy  (i_mult_if_1.rdy)
   );
